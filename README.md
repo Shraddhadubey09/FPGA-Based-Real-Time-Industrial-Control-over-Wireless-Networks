@@ -1,84 +1,63 @@
-# 🚨 RoadSOS
+# 5G-Enabled Bidirectional FPGA-Based Real-Time Industrial Control System
 
-### FPGA-Based Emergency Communication System
+A hardware-based prototype for **bidirectional real-time communication between two FPGA-controlled nodes**, using ESP8266 wireless gateways.
 
-RoadSOS is an FPGA-based emergency communication prototype that transfers emergency events between two FPGA nodes using **UART and Wi-Fi/TCP** through two PCs.
+The current implementation uses **Wi-Fi** for wireless communication. Integration with **5G hardware/CPE** is planned as a future extension.
 
-## 🔹 Architecture
+---
 
-```text
-FPGA 1 → UART → PC 1 → Wi-Fi/TCP → PC 2 → UART → FPGA 2
-```
+## 🔹 System Architecture
 
-## 🔹 Features
+### Current Implementation
 
-* 🚨 Emergency event generation using FPGA
-* 🚗 Vehicle ID and Event ID transmission
-* 📡 UART communication at **115200 baud**
-* 🌐 PC-to-PC communication using Wi-Fi/TCP
-* 🔐 CRC-16/CCITT-FALSE error detection
-* 📺 Event and Vehicle ID display on FPGA2
-* ✅ Emergency acceptance using physical button
-* 🔄 ACK packet generation
-* 📊 Web-based monitoring dashboard
+FPGA-A → UART → ESP8266-A → Wi-Fi → ESP8266-B → UART → FPGA-B
 
-## 🔹 Packet Format
+### Future 5G Architecture
 
-```text
-A5 | EVENT | VEHICLE_ID | CRC | 5A | 0A
-```
+FPGA-A → UART → ESP8266-A → 5G CPE → 5G Network → 5G CPE → ESP8266-B → UART → FPGA-B
 
-* **Event ID:** 8-bit
-* **Vehicle ID:** 16-bit
-* **CRC:** CRC-16/CCITT-FALSE
-* **Packet Size:** 8 bytes
+---
 
-## 🔹 Hardware
+## 🔹 Project Concept
 
-* 2 × RealDigital Boolean Boards
-* AMD/Xilinx Spartan-7 XC7S50
-* 2 × PCs
-* USB-UART connections
+The system demonstrates a bidirectional communication architecture in which:
+
+- **FPGA-A** acts as the control-side processing node.
+- **FPGA-B** acts as the remote machine/control node.
+- **ESP8266-A and ESP8266-B** provide wireless networking between the FPGA nodes.
+- UART is used as the interface between each FPGA and its ESP8266 gateway.
+- The communication link is currently implemented using Wi-Fi.
+- A 5G network can be integrated in the future to evaluate communication performance for remote industrial control applications.
+
+The system is designed around the concept:
+
+**Control → Communication → Remote Action → Feedback**
+
+---
 
 ## 🔹 Current Communication
 
 ```text
-Emergency Button
-       ↓
-    FPGA 1
-       ↓ UART
-     PC 1
-       ↓ Wi-Fi/TCP
-     PC 2
-       ↓ UART
-    FPGA 2
-       ↓
-CRC Validation
-       ↓
-Event + Vehicle Display
-       ↓
-   ACCEPT / ACK
-```
-
-## 🔹 Current Status
-
-| Feature                   | Status |
-| ------------------------- | ------ |
-| FPGA Emergency Generation | ✅      |
-| UART Communication        | ✅      |
-| Wi-Fi/TCP Forwarding      | ✅      |
-| FPGA2 Reception           | ✅      |
-| CRC Verification          | ✅      |
-| Event/Vehicle Display     | ✅      |
-| ACK Generation            | ✅      |
-| Dashboard                 | ✅      |
-
-> **Note:** LoRa is **not used** in the current implementation.
-
-## 🔮 Future Scope
-
-* Embedded gateway instead of PCs
-* GPS/location information
-* Secure authentication/encryption
-* Retransmission and fault recovery
-* Multi-node communication
+┌──────────────┐
+│    FPGA-A    │
+│ Control Node │
+└──────┬───────┘
+       │ UART
+       ▼
+┌──────────────┐
+│  ESP8266-A   │
+│ Wi-Fi Gateway│
+└──────┬───────┘
+       │
+       │ Wi-Fi
+       │
+┌──────▼───────┐
+│  ESP8266-B   │
+│ Wi-Fi Gateway│
+└──────┬───────┘
+       │ UART
+       ▼
+┌──────────────┐
+│    FPGA-B    │
+│ Remote Node  │
+└──────────────┘
