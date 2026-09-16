@@ -1,40 +1,92 @@
-# ⚡ 5G-Enabled FPGA-Based Real-Time Industrial Control
+# FPGA-Based Real-Time Industrial Control over Wireless Networks
 
-<p align="center">
-  <img src="https://img.shields.io/badge/FPGA-Spartan--7-1f6feb?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/ESP8266-Wireless%20Gateway-ff6f00?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/UART-115200-2ea44f?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/CRC--16-CCITT--FALSE-8250df?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/5G-Future%20Integration-e63946?style=for-the-badge" />
-</p>
-
-<p align="center">
-  <b>A bidirectional FPGA communication platform for studying real-time remote industrial control over wireless networks.</b>
-</p>
+> A hardware-in-the-loop communication platform combining FPGA-based control logic, UART communication, ESP8266 wireless networking, packet integrity verification, and a real-time monitoring interface.
 
 ---
 
-## 🧩 Overview
+## Overview
 
-This project develops a **hardware-based bidirectional communication system** using two FPGA nodes connected through ESP8266 wireless gateways.
+This project explores how **FPGA-based real-time control systems can communicate over wireless networks** while maintaining a structured and reliable data path.
 
-The FPGA nodes handle the **real-time control and communication logic**, while the ESP8266 devices provide the wireless networking layer.
+The current prototype uses:
 
-The current prototype uses **Wi-Fi**.
+**FPGA → UART → ESP8266 → Wi-Fi → ESP8266 → UART → FPGA**
 
-The next phase will integrate **5G hardware** to investigate how cellular network characteristics affect real-time industrial control.
+The FPGA handles the time-critical control and communication logic, while the ESP8266 provides the wireless network interface.
 
-### Core concept
+The system is designed as a foundation for evaluating communication characteristics such as:
+
+- Packet integrity
+- End-to-end latency
+- Packet loss
+- Communication reliability
+- Bidirectional communication
+- Response/acknowledgement time
+- Jitter under different network conditions
+
+### Current Implementation
+
+- FPGA-based communication and control logic
+- UART communication at **115200 baud**
+- ESP8266-based Wi-Fi communication
+- Bidirectional FPGA-to-FPGA communication
+- Structured packet transmission
+- CRC-16/CCITT-FALSE error detection
+- Event-based communication
+- Hardware verification using LEDs and 7-segment display
+- PC-based monitoring/dashboard interface
+
+### Future Extension
+
+The architecture is intended to be extended toward:
+
+> **5G-enabled real-time industrial communication and control**
+
+The current implementation therefore acts as the **baseline wireless communication platform**, against which a future 5G implementation can be evaluated.
+
+---
+
+# System Architecture
 
 ```text
-        CONTROL                         REMOTE MACHINE
+                   CURRENT SYSTEM
 
-       FPGA-A                              FPGA-B
-         │                                    │
-         │ UART                               │ UART
-         ▼                                    ▲
-     ESP8266-A                              ESP8266-B
-         │                                    │
-         └──────────── Wi-Fi ────────────────┘
-         
-              ↓ Future: 5G Network ↓
+ ┌──────────────┐
+ │    FPGA 1    │
+ │              │
+ │ Control RTL  │
+ │ Packet Gen.  │
+ │ CRC Engine   │
+ └──────┬───────┘
+        │
+        │ UART
+        ▼
+ ┌──────────────┐
+ │   ESP8266    │
+ │ Wi-Fi Client │
+ └──────┬───────┘
+        │
+        │ Wi-Fi
+        ▼
+ ┌──────────────┐
+ │ Wi-Fi Network│
+ │ / PC Bridge  │
+ └──────┬───────┘
+        │
+        │ Wi-Fi
+        ▼
+ ┌──────────────┐
+ │   ESP8266    │
+ │ Wi-Fi Client │
+ └──────┬───────┘
+        │
+        │ UART
+        ▼
+ ┌──────────────┐
+ │    FPGA 2    │
+ │              │
+ │ UART RX      │
+ │ Packet Decode│
+ │ CRC Checker  │
+ │ ACK Logic    │
+ └──────────────┘
