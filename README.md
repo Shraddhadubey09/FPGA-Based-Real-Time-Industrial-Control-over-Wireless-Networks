@@ -110,7 +110,8 @@ The system is being evaluated for:
 * [x] Packet protocol
 * [x] CRC verification
 * [x] ESP8266 Wi-Fi communication
-* [x] Bidirectional communication
+* [X] Real-time commnunication
+* [ ] Bidirectional communication
 * [ ] Performance characterization
 * [ ] 5G integration
 * [ ] Real-time industrial control demonstration
