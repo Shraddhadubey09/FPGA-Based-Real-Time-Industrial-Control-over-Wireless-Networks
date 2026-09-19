@@ -23,3 +23,19 @@ module uart_tx #(
         end
     end
 endmodule
+
+
+
+end else if(cnt==CPB-1) begin
+                cnt<='0;
+                if(bit_count==9) begin 
+                    tx_busy<=0; 
+                    tx<=1; 
+                    tx_done<=1; 
+                    bit_count<='0; 
+                end else begin 
+                    bit_count <= bit_count + 1'b1; 
+                    shift     <= {1'b0, shift[9:1]}; // shift right
+                    tx        <= shift[0];           // output the next bit correctly
+                end
+            end
