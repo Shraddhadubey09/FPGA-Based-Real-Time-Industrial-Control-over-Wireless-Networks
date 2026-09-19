@@ -58,3 +58,112 @@ module packet_generator (
         endcase
     end
 endmodule
+
+
+
+
+
+MODIFIED
+
+`timescale 1ns/1ps
+// 4-byte wire frame: [ DATA_H ] | [ DATA_L ] | [ CRC_H ] | [ CRC_L ]
+module packet_generator (
+    input  logic        clk,
+    input  logic        rst,
+    input  logic        request,
+    input  logic [15:0] data_in,      // 16-bit data payload
+    output logic        uart_start,
+    output logic [7:0]  uart_data,
+    input  logic        uart_busy,
+    input  logic        uart_done,
+    output logic        busy,
+    output logic        packet_done
+);
+
+    typedef enum logic [2:0] {
+        IDLE, 
+        C0, C1, CW,             // CRC calculation states (2 bytes)
+        S0, S1, S2, S3          // UART transmission states (4 bytes total)
+    } st_t;
+
+    st_t state;
+    logic [15:0] data_reg, crc_reg, crc_out;
+    logic        crc_valid;
+    logic        crc_start, crc_dv, crc_last;
+    logic [7:0]  crc_data;
+
+    // Reuse the existing CRC-16 generator module
+    crc_generator u_crc (
+        .clk(clk),
+        .rst(rst),
+        .start(crc_start),
+        .data_valid(crc_dv),
+        .last(crc_last),
+        .data_in(crc_data),
+        .crc_out(crc_out),
+        .crc_valid(crc_valid)
+    );
+
+    // Sequential Logic (FSM State Transitions)
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            state    <= IDLE;
+            data_reg <= '0;
+            crc_reg  <= '0;
+        end else begin
+            case (state)
+                IDLE: if (request) begin
+                    data_reg <= data_in;
+                    state    <= C0;
+                end
+                
+                C0: state <= C1;
+                C1: state <= CW;
+                
+                CW: if (crc_valid) begin
+                    crc_reg <= crc_out;
+                    state   <= S0;
+                end
+                
+                // UART transmission byte handshakes
+                S0: if (!uart_busy) state <= S1;
+                S1: if (!uart_busy) state <= S2;
+                S2: if (!uart_busy) state <= S3;
+                S3: if (uart_done)  state <= IDLE;
+                
+                default: state <= IDLE;
+            endcase
+        end
+    end
+
+    // Combinational Logic (Control signals and UART data multiplexing)
+    always_comb begin
+        crc_start   = 1'b0;
+        crc_dv      = 1'b0;
+        crc_last    = 1'b0;
+        crc_data    = 8'h00;
+        uart_start  = 1'b0;
+        uart_data   = 8'h00;
+        busy        = (state != IDLE);
+        packet_done = 1'b0;
+
+        case (state)
+            // Feed the 16-bit data (split into 2 bytes) into the CRC generator
+            C0: begin crc_start = 1; crc_dv = 1; crc_data = data_reg[15:8]; end
+            C1: begin crc_dv = 1; crc_last = 1; crc_data = data_reg[7:0];  end
+
+            // Stream out: [Data High] -> [Data Low] -> [CRC High] -> [CRC Low]
+            S0: begin uart_data = data_reg[15:8]; if (!uart_busy) uart_start = 1; end
+            S1: begin uart_data = data_reg[7:0];  if (!uart_busy) uart_start = 1; end
+            S2: begin uart_data = crc_reg[15:8];  if (!uart_busy) uart_start = 1; end
+            S3: begin 
+                uart_data = crc_reg[7:0]; 
+                if (!uart_busy) uart_start = 1; 
+                if (uart_done)  packet_done = 1; 
+            end
+
+            default: ;
+        endcase
+    end
+
+endmodule
