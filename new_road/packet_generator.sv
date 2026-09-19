@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 // 8-byte wire frame: A5 | TYPE/EVENT | VEH_H | VEH_L | CRC_H | CRC_L | 5A | 0A
+//                       |  8         |   16          |    16         | 8     
 // CRC-16/CCITT-FALSE covers the first four bytes.
 module packet_generator (
     input logic clk, input logic rst,
